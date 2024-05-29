@@ -1,0 +1,20 @@
+******** output from writeapr.pro ********
+8                       ! number of variable profiles (vmr,T, or cont)
+-1 0 32                 ! cloud variable 1
+ 3.00000 1.00000e-07
+ 1e-20 1e-27
+ 0.05 0.05e-7
+-2 0 0
+ hazeapr.dat
+444 1 444
+cloudf.dat
+444 2 444
+hazef.dat
+6 1 0
+methane.vmr
+22 0 3
+1.0 1.0e-7
+36 0 3
+1.0 1.0e-7
+11 0 3
+1.0 1.0e-7

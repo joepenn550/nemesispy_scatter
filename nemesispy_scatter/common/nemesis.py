@@ -195,13 +195,13 @@ class NEMESIS:
 
                     if ilbl == 0:
                         try:
-                            kta_file_path, _, _ = parse_table_file(subfolder + project + '.kls')
+                            kta_file_path, _, _ = parse_table_file(subfolder + project + '.kls', subfolder)
                         except Exception as e:
                             if self.rank == 0:
                                 print(e, flush=True)
                                 print('ILBL = 0, but .kls file is not present. Trying to read .lls file.', flush=True)
                             try:
-                                kta_file_path, _, _ = parse_table_file(subfolder + project + '.lls')
+                                kta_file_path, _, _ = parse_table_file(subfolder + project + '.lls', subfolder)
                             except Exception as e:
                                 if self.rank == 0:
                                     print(e, flush=True)
@@ -214,13 +214,13 @@ class NEMESIS:
 
                     elif ilbl == 2:
                         try:
-                            kta_file_path, _, _ = parse_table_file(subfolder + project + '.lls')
+                            kta_file_path, _, _ = parse_table_file(subfolder + project + '.lls', subfolder)
                         except Exception as e:
                             if self.rank == 0:
                                 print(e, flush=True)
                                 print('ILBL = 2, but .lls file is not present. Trying to read .kls file.', flush=True)
                             try:
-                                kta_file_path, _, _ = parse_table_file(subfolder + project + '.kls')
+                                kta_file_path, _, _ = parse_table_file(subfolder + project + '.kls', subfolder)
                             except Exception as e:
                                 if self.rank == 0:
                                     print(e, flush=True)
@@ -228,14 +228,14 @@ class NEMESIS:
                                 self.comm.Abort(1)
 
                     try:
-                        cia_file_path, dnu, npara = parse_table_file(subfolder + project + '.cia', cia=True)
+                        cia_file_path, dnu, npara = parse_table_file(subfolder + project + '.cia', subfolder, cia=True)
                     except Exception as e:
                         if self.rank == 0:
                             print(e, flush=True)
                             print('Could not find .cia file', flush=True)
 
                     try:
-                        sol_file_path, _, _ = parse_table_file(subfolder + project + '.sol')
+                        sol_file_path, _, _ = parse_table_file(subfolder + project + '.sol', subfolder)
                     except Exception as e:
                         if self.rank == 0:
                             print(e, flush=True)

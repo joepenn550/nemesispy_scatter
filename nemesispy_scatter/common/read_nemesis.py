@@ -1,5 +1,6 @@
 from nemesispy_scatter.common.parameterisations import *
 import numpy as np
+import os
 
 def parse_spx_file(filepath):
     with open(filepath, 'r') as file:
@@ -154,7 +155,7 @@ def parse_set_file(file_path):
         layint = int(f.readline().split()[-1].strip())
     return mu, wtmu, nf, nphi, insol, soldist, lowbc, galb, tsurf, H0, npro, laytype, layint
             
-def parse_table_file(file_path, cia=False): # NEED TO IMPLEMENT READING DNU, NPARA, ETC
+def parse_table_file(file_path,subfolder, cia=False): # NEED TO IMPLEMENT READING DNU, NPARA, ETC
     with open(file_path, "r") as f:
         table_paths = []
         line = f.readline().replace('\n', '')
@@ -165,6 +166,9 @@ def parse_table_file(file_path, cia=False): # NEED TO IMPLEMENT READING DNU, NPA
             dnu = 0.0
             npara = 0
         while line:
+            if not os.path.exists(line):
+                if os.path.exists(subfolder+line):
+                    line = subfolder+line
             table_paths.append(line)
             line = f.readline().replace('\n', '')  
     return table_paths, dnu, npara
