@@ -19,18 +19,6 @@ from nemesispy_scatter.radtran.calc_tau_rayleigh import calc_tau_rayleigh, rayle
 from nemesispy_scatter.radtran.scatter import scloud11wave
 from nemesispy_scatter.common.constants import K_B, N_A
 
-
-# import inspect
-# import sys
-# def recompile_nb_code():
-#     this_module = sys.modules[__name__]
-#     module_members = inspect.getmembers(this_module)
-
-#     for member_name, member in module_members:
-#         if hasattr(member, 'recompile') and hasattr(member, 'inspect_llvm'):
-#             member.recompile()
-# recompile_nb_code()
-
 @jit(nopython=True, parallel=False, cache=os.environ.get("USE_NUMBA_CACHE") == 'True')
 def calc_radiance(wave_grid, U_layer, P_layer, T_layer, VMR_layer, A_layer, PARA_layer, phase_arr,
                   k_gas_w_g_p_t, k_wave_grid, P_grid, T_grid, del_g, ScalingFactor, R_plt, solspec,
