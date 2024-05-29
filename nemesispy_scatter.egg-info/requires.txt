@@ -1,0 +1,6 @@
+numpy
+scipy
+mpi4py
+numba
+tqdm
+ultranest
