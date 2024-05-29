@@ -1,5 +1,9 @@
 Installation:
 
+To install, type:
+
+pip install .
+
 Usage:
 
 There's an example script in the folder containing this file - it's very simple. It imports the NEMESIS class, initialises it with an input file, and runs optimal estimation. The input file is of the following form (there's one in the folder as well):
