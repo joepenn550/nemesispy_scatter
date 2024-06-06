@@ -970,8 +970,8 @@ def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu
     Parameters
     ----------
     phasarr(NMODES,NWAVE,3,NPHAS):
-        If imie = 0, contains fitted HG-phase function parameters f, g1, g2 and NPHAS = 0
-        If imie = 1, contains phase functions and corresponding angle grid 
+        If imie = 0, contains fitted HG-phase function parameters f, g1, g2 and NPHAS = 1
+        If imie = 1, contains phase functions (phasarr[:,:,0,:]) and corresponding angle grid (phasarr[:,:,1,:])
     radg(NWAVE,NMU): 
         Incident intensity at the bottom of the atm
     sol_ang:
