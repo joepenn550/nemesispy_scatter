@@ -23,7 +23,7 @@ from nemesispy_scatter.common.constants import K_B, N_A
 def calc_radiance(wave_grid, U_layer, P_layer, T_layer, VMR_layer, A_layer, PARA_layer, phase_arr,
                   k_gas_w_g_p_t, k_wave_grid, P_grid, T_grid, del_g, ScalingFactor, R_plt, solspec,
                   k_cia, ID, cia_nu_grid, cia_frac_grid, cia_T_grid, dH, emiss_ang, sol_ang, aphi, lta, xextnorms, mu, wtmu, 
-                  IRAY=4, INORMAL=0, ISPACE=1, f_flag=True, fours=-1):
+                  IRAY=4, INORMAL=0, ISPACE=1, IMIE=0):
     """
     Calculate emission spectrum using the correlated-k method.
 
@@ -82,13 +82,13 @@ def calc_radiance(wave_grid, U_layer, P_layer, T_layer, VMR_layer, A_layer, PARA
     NLAYER = len(P_layer)
     NVMR = VMR_layer.shape[1]
     NMODES = A_layer.shape[1]
-
     # Initiate arrays to record total optical paths
     tau_total_w_g_l = np.zeros((NWAVE, NG, NLAYER))
 
     # Collision induced absorption optical path
     tau_cia = calc_tau_cia(wave_grid, k_cia, ISPACE, ID, U_layer, T_layer, P_layer,
                            VMR_layer, PARA_layer, dH, cia_nu_grid, cia_T_grid, cia_frac_grid, INORMAL)
+    
     
     # Rayleigh scattering optical path
     if IRAY == 0:
@@ -161,20 +161,27 @@ def calc_radiance(wave_grid, U_layer, P_layer, T_layer, VMR_layer, A_layer, PARA
         bnu[:,ilayer] = calc_planck(wave_grid,T_layer[ilayer],ispace=ISPACE)
     
     radg = (radground * xfac / xfac * np.ones((5, NWAVE))).T
-    nf = int(emiss_ang / 3) if fours == -1 else fours
-    new_fours = 0
+    nf = int(emiss_ang / 3)
+    
+    #REPLACE THE FOLLOWING!
+    galb = np.zeros(NWAVE) 
+    lowbc = 1
+    
+    if IMIE == 0:
+        phasarr = phase_arr[:,:,2:5,None]
+    else:
+        print('PHASE FUNCTIONS NOT PROPERLY IMPLEMENTED')
+    recomp = 1
     for ig in prange(NG):
-        spec_w_g[:, ig], new_spec_fours = scloud11wave(phasarr=phase_arr, radg=radg, 
+        spec_w_g[:, ig] = scloud11wave(phasarr=phasarr, radg=radg, 
                                                        sol_ang=sol_ang, emiss_ang=emiss_ang, 
-                                                       solar=solspec, aphi=aphi, lowbc=1, galb=0., 
-                                                       mu1=mu, wt1=wtmu, nmu=len(mu), nf=nf, igdist=1, 
+                                                       solar=solspec, aphi=aphi, lowbc=lowbc, galb=galb, 
+                                                       mu1=mu, wt1=wtmu, nf=nf, 
                                                        vwaves=wave_grid, bnu=bnu, tau=tau_total_w_g_l[:, ig], 
                                                        tauray=tau_rayleigh, omegas=omegas[:, ig], 
-                                                       nlay=NLAYER, ncont=NMODES, nphi=100, iray=IRAY, 
-                                                       lfrac=lfrac, raman=False, f_flag=f_flag)
-        new_fours = max(new_spec_fours, new_fours)
-
+                                                       nphi=100, iray=IRAY, 
+                                                       lfrac=lfrac, imie=IMIE)
     spectrum = np.sum(spec_w_g * del_g, axis=1)
 
-    return spectrum, new_fours
+    return spectrum
 

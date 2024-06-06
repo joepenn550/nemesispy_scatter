@@ -584,7 +584,7 @@ def makephase(wave_grid, iscat, dsize, rs, nimag_wave_grid, calc_wave_grid,
 
 
 @njit(fastmath=True, error_model='numpy')
-def phase1(calpha, iscat, cons, icons=0, icont=None, ncont=None, vwave=None):
+def phase1(calpha, iscat, cons, icons=0, icont=None, ncont=None, vwave=None, pfunc = None, xmu = None):
     pi = np.pi
     calpha = min(max(calpha, -1.0), 1.0)
     if iscat == 0:
@@ -616,6 +616,9 @@ def phase1(calpha, iscat, cons, icons=0, icont=None, ncont=None, vwave=None):
                 x0 *= xf
                 x1 *= xf
             p += cons[n0] * pa0 + cons[n1] * pa1
+    elif iscat == 4:
+        p = np.interp(calpha,xmu,pfunc)
+        
     else:
         print('Error invalid scattering option.')
         return None
@@ -623,7 +626,7 @@ def phase1(calpha, iscat, cons, icons=0, icont=None, ncont=None, vwave=None):
     return p
 
 @njit(fastmath=True, error_model='numpy')
-def phasint2(nphi, ic, nmu, mu, iscat, cons, ncons, icont, ncont, vwave, idump=0):
+def phasint2(nphi, ic, nmu, mu, iscat, cons, ncons, icont, ncont, vwave, pfunc, xmu, idump=0):
     pi = np.pi
     const = 1.0
 #     if nphi <= nf:
@@ -640,9 +643,9 @@ def phasint2(nphi, ic, nmu, mu, iscat, cons, ncons, icont, ncont, vwave, idump=0
             for k in range(0, nphi + 1):
                 phi = k * dphi
                 cpl = sthi * sthj * np.cos(phi) + mu[i] * mu[j]
-                pl = phase1(cpl, iscat, cons, ncons, icont, ncont, vwave)
+                pl = phase1(cpl, iscat, cons, ncons, icont, ncont, vwave, pfunc, xmu)
                 cmi = sthi * sthj * np.cos(phi) - mu[i] * mu[j]
-                pm = phase1(cmi, iscat, cons, ncons, icont, ncont, vwave)
+                pm = phase1(cmi, iscat, cons, ncons, icont, ncont, vwave, pfunc, xmu)
                 plx = pl * np.cos(ic * phi)
                 pmx = pm * np.cos(ic * phi)
                 wphi = dphi
@@ -691,10 +694,10 @@ def hansen(ic, ppl, pmi, maxp, wtmu, nmu, fc):
     return (ppl, fc)
 
 @njit(fastmath=True)
-def calc_pmat6(ic, mu, wtmu, nmu, iscat, cons8, ncons, norm, icont, ncont, vwave, nphi, fc):
+def calc_pmat6(ic, mu, wtmu, nmu, iscat, cons8, ncons, norm, icont, ncont, vwave, nphi, fc, pfunc, xmu):
     pi = np.pi
 
-    pplpl, pplmi = phasint2(nphi, ic, nmu, mu, iscat, cons8, ncons, icont, ncont, vwave)
+    pplpl, pplmi = phasint2(nphi, ic, nmu, mu, iscat, cons8, ncons, icont, ncont, vwave, pfunc, xmu)
 #     pplpl = ptpl[icont]
 #     pplmi = ptmi[icont]
     if norm == 1:
@@ -768,7 +771,7 @@ def add(r1, t1, j1, e, nmu,ic):
     jans = np.zeros_like(j1)
     
     elemult(r1,r1,rsq,nmu)
-    if r1[0,0]>0.001:
+    if rsq[-1,-1]>0.01: # Spectral radius: Neumann series + Gershgorin circle theorem (bit dodgy)
         acom = np.linalg.solve(e - rsq, e)
     else: 
         acom = e + rsq
@@ -859,14 +862,8 @@ def double1(ic,l,nmu,jdim,cc,pplpl,pplmi,omega, mu,taut,bc,xfac,mminv,e,raman = 
     # Computation of R, T and J for initial layer
     t1 = e - tau0 * gplpl.transpose()
     r1 = tau0 * gplmi.transpose()
-#     print(l,tau0,flush=True)
-#     print(repr(t1),flush=True)
-    # RAMAN STUFF - SHOULD ADD THIS
+
     if ic == 0:
-#         for j in range(nmu):
-#             if raman and (iraman >= 1) and (iraman <= nraman):
-#                 j1[j, 0] = (1.0 - omega) * bc * tau0 * mminv[j, j] + xfac * jraman[iraman] * mminv[j, j]
-#             else:
         j1 = (1.0 - omega) * bc * tau0 * mminv
     
     else:
@@ -897,7 +894,7 @@ def addp(r1, t1, j1, iscat1,e, rsub, tsub, jsub, jdim, nmu): #needs checking
         
         # Second layer is scattering
         elemult(rsub,r1,rsq,nmu)
-        if r1[0,0]>0.001: # Approximation for speed
+        if rsq[-1,-1]>0.01: # Spectral radius: Neumann series + Gershgorin circle theorem (bit dodgy)
             acom = np.linalg.solve(e - rsq, e)
             elemult(t1,acom,ccom,nmu)
         else:
@@ -964,11 +961,70 @@ def idown(ra, ta, ja, rb, tb, jb, u0pl, utmi):
     return upl
 
 @njit(fastmath = True,parallel=False, cache = False, error_model='numpy')
-def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu1, wt1, nmu, nf,
-                igdist, vwaves, bnu, tau, tauray,omegas, nlay, ncont, nphi,iray, lfrac, raman, f_flag):
+def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu1, wt1, nf,
+                vwaves, bnu, tau, tauray,omegas, nphi,iray, lfrac, imie=0):
+    
+    """
+    Calculate spectrum using the adding-doubling method.
+
+    Parameters
+    ----------
+    phasarr(NMODES,NWAVE,3,NPHAS):
+        If imie = 0, contains fitted HG-phase function parameters f, g1, g2 and NPHAS = 0
+        If imie = 1, contains phase functions and corresponding angle grid 
+    radg(NWAVE,NMU): 
+        Incident intensity at the bottom of the atm
+    sol_ang:
+        Solar zenith angle (degrees)
+    emiss_ang:
+        Emission zenith angle (degrees)
+    solar(NWAVE):        
+        Incident solar flux at the top of the atm
+    aphi:
+        Azimuth angle between Sun and observer
+    lowbc:
+        Lower boundary condition: 0 = thermal, 1 = Lambert reflection
+    galb(NWAVE):
+        Ground albedo at the bottom
+    mu1(NMU):  
+        Zenith angle point quadrature
+    wt1(NMU):  
+        Zenith angle point quadrature
+    nf:
+        Maximum number of terms in azimuth Fourier expansion 
+    vwaves(NWAVE):
+        Input wavelengths.
+    bnu(NWAVE,NLAY):
+        Mean Planck function in each layer
+    tau(NWAVE,NLAY):
+        Total optical thickness of each layer
+    tauray(NWAVE,NLAY):
+        Rayleigh optical thickness of each layer
+    omegas(NWAVE,NLAY):
+        Single scattering albedo of each layer
+    nphi:
+        Number of azimuth integration ordinates
+    iray:
+        Flag for using rayleigh scattering
+    lfrac(NCONT,NLAY):
+        Fraction of scattering contributed by each type in each layer
+    imie:
+        Flag for phasarr behaviour
+    
+    Returns
+    -------
+    rad(NWAVE):
+        Upwards radiance at each wavelength
+    """
+        
+    nwave = len(vwaves)
+    nmu = len(mu1)
+    nlay = tau.shape[1]
+    ncont = phasarr.shape[0]
+    
     ltot = nlay
     lt1 = ltot
-    nf = nf + 1 #some fortran index issue, fix this
+    nf = nf + 1
     
     idump = 0
     fours = 0
@@ -982,17 +1038,12 @@ def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu
 
     pi = np.pi
     
-    nwave = len(vwaves)
-    
     yx = np.zeros((4))
     u0pl = np.zeros((nmu,1))
     utmi = np.zeros((nmu,1))
 
     umi = np.zeros((nlay,nmu))
     upl = np.zeros((nlay,nmu))
-
-#     ptpl = np.zeros((ncont+1, nmu, nmu))
-#     ptmi = np.zeros((ncont+1, nmu, nmu))
 
     ppln = np.zeros((ncont, nmu, nmu))
     pmin = np.zeros((ncont, nmu, nmu))
@@ -1002,18 +1053,9 @@ def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu
     tl = np.zeros((nmu,nmu))
     jl = np.zeros((nmu,1))
 
-#     rlf = np.zeros((nwave,nmu,nmu,nlay+lowbc))
-#     tlf = np.zeros((nwave,nmu,nmu,nlay+lowbc))
-#     jlf = np.zeros((nwave,nmu,1,nlay+lowbc))
-
     rbase = np.zeros((nmu,nmu))
     tbase = np.zeros((nmu,nmu))
     jbase = np.zeros((nmu,1))
-
-#     rtop = np.zeros((nwave,nmu,nmu,nlay+lowbc))
-#     ttop = np.zeros((nwave,nmu,nmu,nlay+lowbc))
-#     jtop = np.zeros((nwave,nmu,1,nlay+lowbc))
-
 
     iscl = np.zeros((nwave))
 
@@ -1065,7 +1107,7 @@ def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu
     
     t = femm
     u = fsol
-#     print(t,u,mu[iemm-1])
+
     radg = radg[:,::-1]
     
     fc = np.ones((ncont+1,nmu,nmu))
@@ -1076,32 +1118,50 @@ def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu
         vwave = vwaves[widx]
         defconv = 1e-3
         for ic in range(nf):
-            if igdist == 1:
-                ppln*=0
-                pmin*=0 
-                pplr*=0
-                pmir*=0
-                for j1 in range(ncont):
-                    f, g1, g2 = phasarr[j1, widx, 2:5]  
+            ppln*=0
+            pmin*=0 
+            pplr*=0
+            pmir*=0
+            
+            for j1 in range(ncont):
+                if imie == 0:
+                    f, g1, g2 = phasarr[j1, widx, :, 0]  
                     iscat = 2
                     ncons = 3
                     cons8 = np.array([f, g1, g2])
                     norm = 1
+                    pfunc = cons8
+                    xmu = cons8
+                    
                     pplpl, pplmi, fc[j1] = calc_pmat6(ic, mu, wtmu, nmu, iscat, cons8, ncons, 
-                                              norm, j1, ncont, vwave, nphi, fc[j1])
+                                              norm, j1, ncont, vwave, nphi, fc[j1], pfunc, xmu)
                     # Transfer matrices to those for each scattering particle
                     ppln[j1] = pplpl
                     pmin[j1] = pplmi
-
-                if iray > 0:
-                    iscat = 0
+                    
+                else:
+                    pfunc = phasarr[j1, widx, 0, :]
+                    xmu   = phasarr[j1, widx, 1, :]
+                    iscat = 4
                     ncons = 0
-                    pplpl, pplmi, fc[ncont] = calc_pmat6(ic, mu, wtmu, nmu, iscat, cons8, ncons, 
-                                                1, ncont, ncont, vwave, nphi, fc[ncont])
+                    cons8 = pfunc
+                    norm = 1
+                    pplpl, pplmi, fc[j1] = calc_pmat6(ic, mu, wtmu, nmu, iscat, cons8, ncons, 
+                                              norm, j1, ncont, vwave, nphi, fc[j1], pfunc, xmu)
+                    # Transfer matrices to those for each scattering particle
+                    ppln[j1] = pplpl
+                    pmin[j1] = pplmi
+                
+                
+            if iray > 0:
+                iscat = 0
+                ncons = 0
+                pplpl, pplmi, fc[ncont] = calc_pmat6(ic, mu, wtmu, nmu, iscat, cons8, ncons, 
+                                            1, ncont, ncont, vwave, nphi, fc[ncont], pfunc, xmu)
 
-                    # Transfer matrices to storage
-                    pplr[0] = pplpl
-                    pmir[0] = pplmi
+                # Transfer matrices to storage
+                pplr[0] = pplpl
+                pmir[0] = pplmi
 
 
             for l in range(0,ltot):
@@ -1127,11 +1187,11 @@ def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu
                 omega = (tauscat+taur)/taut
 
                 if l == 0 and lowbc == 1:
-                    jl[:,0] = (1-galb)*radg[widx]
+                    jl[:,0] = (1-galb[widx])*radg[widx]
                     if ic == 0:
                         tl *= 0.0
                         for j in range(nmu):
-                            rl[j,:] = 2*galb*mu[j]*wtmu[j] 
+                            rl[j,:] = 2*galb[widx]*mu[j]*wtmu[j] 
                             rl[:,:]*= xfac
                     else:
                         tl *= 0.0
@@ -1170,17 +1230,9 @@ def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu
                         pplpl += tauscat/(tauscat+taur)*ppln[j1]*lfrac[widx,j1,k] 
                         pplmi += tauscat/(tauscat+taur)*pmin[j1]*lfrac[widx,j1,k] 
 
-#                         print(taur/(tauscat+taur),tauscat/(tauscat+taur),lfrac[widx,0,k]
-
-#                         print(np.sum(pplpl[:, :] * wtmu) * 2*np.pi)
-#                         print(np.sum(pplmi[:, :] * wtmu) * 2*np.pi)
-
-
                     iscl[widx] = 1
-#                         print(taut,omega,xfac)
                     rl, tl, jl = double1(ic,l,nmu,jdim,cc,pplpl,pplmi,omega,mu1,taut,bc,xfac, mminv,e)
-#                         print(rl[0,2,2],tl[0,2,2],jl[0,2,0])
-#                         print(pplpl)
+
                 if l == 0 and lowbc == 0:
                     jbase = jl
                     rbase = rl
@@ -1202,20 +1254,11 @@ def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu
                 else:
                     utmi[j] = 0.0
 
-#             print('R:',rbase,flush=True)
-#             print('T:',tbase,flush=True) 
             ico = 0
-    #         print(tbase[:nmu,:nmu,ltot-1])
-    #         print('---------------')
-#             print(repr(pplpl),flush=True)
-#             print(repr(pplmi),flush=True)
 
-            for imu0 in range(isol-1, isol+1):  # Adjust for zero-based indexing
+            for imu0 in range(isol-1, isol+1):  # Adjust for zero-indexing
                 u0pl[imu0] = solar1[widx] / (2.0 * np.pi * wtmu[imu0])
                 acom = rbase.transpose() @ u0pl
-#                 print(rbase[widx])
-
-#                 print(acom)
                 bcom = tbase @ utmi
                 acom += bcom
                 umi = acom + jbase
@@ -1231,21 +1274,16 @@ def scloud11wave(phasarr, radg, sol_ang, emiss_ang, solar, aphi, lowbc, galb, mu
 
             rad[widx] += drad
             conv = np.abs(drad / rad[widx])
-#                 print(widx,ic,drad,flush=True)
-            if conv < defconv and conv1:
-                converged = True#break
 
+            if conv < defconv and conv1:
+                break
+                
             if conv < defconv:
                 conv1 = True
             else:
                 conv1 = False
-                
-            if converged and f_flag:
-                fours = max(ic,fours)
-                break
-        fours = max(ic,fours)
     
-    return rad, fours
+    return rad
 
 def ramanjsource(fmean, vv, lambda0, dens, fpraman, jraman, vram0, vramst, nraman, h2abund, iraman, kwt):
     lambda0 = 10000.0 / vv

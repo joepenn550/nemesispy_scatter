@@ -253,6 +253,7 @@ class NEMESIS:
                     self.FM.ins_shape = ins_shape
                     self.FM.layer_type = laytype
                     self.FM.iray = iray
+                    self.FM.imie = imie
                     self.FM.ispace = ispace
                     self.FM.inormal = inormal
                     self.FM.custom_p_base = custom_p_base
@@ -722,7 +723,7 @@ class NEMESIS:
         kk = (spec - y)/(dx)
         return kk
 
-    def get_spec(self,xn,emiss_angle, sol_angle, aphi, remake_phase=True, indices = None, f_flag = False):
+    def get_spec(self,xn,emiss_angle, sol_angle, aphi, remake_phase=True, indices = None):
         if indices is not None:
             self.FM.wave_grid = self.single_wave_grid[indices]
             sol = self.sol[indices]
@@ -740,7 +741,7 @@ class NEMESIS:
         
         spec = self.FM.calc_point_spectrum(self.H_model.copy(), self.P_model,T_model_new,VMR_model_new,
                                  A_model_new,A_info,PARA_model_new,size_model,self.size_flags,n_real_model,self.n_real_flags,
-                                 self.H0,emiss_angle,sol_angle,aphi,solspec = sol,remake_phase = remake_phase,f_flag = f_flag)
+                                 self.H0,emiss_angle,sol_angle,aphi,solspec = sol,remake_phase = remake_phase)
 
         return spec
 
@@ -756,28 +757,19 @@ class NEMESIS:
         end_spec = start_spec + specs_per_process
 
         for spec_index in range(start_spec, end_spec):
-            if self.first_run:
-                self.f_b_flag = False
-                
             xi = x[spec_index * self.nvar:(spec_index + 1) * self.nvar]
             for j in range(self.ngeom):
                 remake_phase = j == 0
                 ys = np.concatenate([ys, self.get_spec(xi,self.angles[j], 
                                                        self.sol_angles[j], 
-                                                       self.aphis[j],remake_phase,f_flag = True)])
+                                                       self.aphis[j],remake_phase)])
             self.first_run = False
 
         if self.first_run:
             xi = x[0:self.nvar]
             _ = self.get_spec(xi, self.angles[0], self.sol_angles[0], self.aphis[0], remake_phase=True)
             self.first_run = False
-            self.f_b_flag = False
-            
-            
-        if not self.f_b_flag:
-            self.FM.fours = self.comm.bcast(self.FM.fours,root=0)
-            self.f_b_flag = True
-            self.comm.barrier()
+
             
         if self.rank == 0:
             print('Spectrum calculated', flush=True)

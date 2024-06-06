@@ -104,7 +104,6 @@ def calc_tau_cia(wave_grid, K_CIA, ISPACE,
     NPAIR = K_CIA.shape[0]
     NLAY,NVMR = VMR_layer.shape
     ISO = np.zeros((NVMR))
-
     # mixing ratios of the relevant gases
     qh2 = np.zeros((NLAY))
     qhe = np.zeros((NLAY))

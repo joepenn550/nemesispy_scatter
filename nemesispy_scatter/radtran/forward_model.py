@@ -51,8 +51,6 @@ class ForwardModel():
         self.k_cia_pair_t_w = None
         self.is_opacity_data_set = False
 
-        self.fours = {}
-        
         self.mu = None
         self.wtmu = None
         
@@ -302,7 +300,7 @@ class ForwardModel():
     def calc_point_spectrum(
             self, H_model, P_model, T_model, VMR_model, A_model, A_info, PARA_model,
             size_model, size_flags, n_real_model, n_real_flags, H_0,
-            path_angle, sol_ang, aphi, solspec=[], remake_phase=True, f_flag=False):
+            path_angle, sol_ang, aphi, solspec=[], remake_phase=True):
         """
         Calculate average layer properties from model inputs,
         then compute the spectrum of a plane parallel atmosphere.
@@ -311,7 +309,7 @@ class ForwardModel():
         A_model, nmodes, info_stats = self.process_aerosol_model(
             A_model, A_info, size_model, size_flags, n_real_model, n_real_flags, len(H_model)
         )
-
+        
         H_model = calc_hydrostat(
             P_model, T_model, mmw, self.M_plt, self.R_plt, self.plt_params, H=H_model
         )
@@ -355,23 +353,15 @@ class ForwardModel():
         sorted_gas_id_list = self.gas_id_list[gas_sorting_indices]
         sorted_VMR_layer = VMR_layer[:, gas_sorting_indices]
 
-        try:
-            nf = self.fours[path_angle]
-        except:
-            nf = -1
-
-        point_spectrum, fours = calc_radiance(
+        point_spectrum = calc_radiance(
             wave_grid, U_layer, P_layer, T_layer, sorted_VMR_layer, A_layer, PARA_layer,
             self.phase_array, self.k_gas_w_g_p_t, self.k_wave_grid, self.k_table_P_grid,
             self.k_table_T_grid, self.del_g, ScalingFactor=scale, R_plt=self.R_plt, solspec=solspec,
             k_cia=self.k_cia_pair_t_w, ID=sorted_gas_id_list, cia_nu_grid=self.cia_nu_grid,
             cia_frac_grid=self.cia_frac_grid, cia_T_grid=self.cia_T_grid, dH=dH, emiss_ang=path_angle,
             sol_ang=sol_ang, aphi=aphi, lta=self.lta_flags[0], xextnorms=self.xextnorms, mu=self.mu,
-            wtmu=self.wtmu, IRAY=self.iray, INORMAL=self.inormal, ISPACE=self.ispace, f_flag=f_flag, fours=nf
+            wtmu=self.wtmu, IRAY=self.iray, INORMAL=self.inormal, ISPACE=self.ispace, IMIE=self.imie
         )
-
-        if f_flag:
-            self.fours[path_angle] = fours
 
         if self.FWHM > 0:
             point_spectrum = lblconv(
