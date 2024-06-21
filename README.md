@@ -11,10 +11,15 @@ pip install .
 There's an example script in the folder containing this file - it's very simple. It imports the NEMESIS class, initialises it with an input file, and runs optimal estimation. The input file is of the following form (there's one in the folder as well):
 
 HEADER
+
 0 or 1 for multiple folder input - this tells the code whether you're about to give it the path to a single folder to run a retrieval in (0) or whether you are giving it the path to a folder containing multiple folders to run retrievals in simultaneously.
+
 The next line is just the path to the retrieval folder.
+
 The next line is the project (the name of your .spx, .inp files)
+
 The Mie scattering calculations work a little differently in this version, so the next line tells Nemesis how spaced out the Makephase calculation wavelengths should be. To replicate Fortran results, leave this at 0.
+
 The final line is the correlation length in degrees for the spatial smoothing term. Just like the vertical smoothing for continuous profiles, this correlates the state vectors between retrievals if you are running in multiple folder mode. The degree of correlation is dependent on the locations in the .spx files, and the correlation length. Setting this to 0 gives the same results as running the retrievals separately.
 
 Once you've filled out the input file, you can run the script with:
