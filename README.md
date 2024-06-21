@@ -42,4 +42,22 @@ to run on N cores. The speed of retrievals scales (roughly) linearly with the nu
 
 · For what I've been doing, the forward model matches up with the Fortran version to a high degree of accuracy. However, some combinations of inputs seem to cause deviations from this - I think I've fixed most of them, but I'm sure some still remain.
 
-· If you're using spatial smoothing, the matrix operations needed for optimal estimation take longer with larger spatial correlation lengths. In particular, calculating the errors on xn at the end of a retrieval can take a really long time - with long state vectors and a large number of locations.
+· If you're using spatial smoothing, the matrix operations needed for optimal estimation take longer with larger spatial correlation lengths. In particular, calculating the errors on xn at the end of a retrieval can take a long time with long state vectors and a large number of locations.
+
+## Nested Sampling
+
+- There is an example in
+- The current way to do nested sampling is by adding a prior distribution code (0 for a log-gaussian, 1 for a log-uniform distribution) and a prior distribution width (in terms of the apriori fractional error) to lines in the .apr file. It defaults to a gaussian with a standard deviation of 1*(apriori error)
+- For example, consider this cloud:
+-1 0 32
+  
+1.0 0.2 1 5
+
+1e-2 4e-3 0 3
+
+0.05 0.05e-8
+- The first parameter, the knee pressure, has a log-uniform prior distribution, with a mean of 1, an upper bound of exp(log(1) + (0.2/1)*5) = exp(1) and a lower bound of exp(log(1) - (0.2/1)*5) = exp(-1)
+- The second parameter, the peak opacity, has a log-gaussian prior distribution with a mean of 1e-2, and a standard deviation in log space of (4e-3/1e-2)*3 = 1.2
+- The third parameter has a fractional error less than 1e-7 and so does not vary.
+
+
