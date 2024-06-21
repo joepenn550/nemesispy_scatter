@@ -8,7 +8,7 @@ pip install .
 
 ## Usage:
 
-There's an example script in the folder containing this file - it's very simple. It imports the NEMESIS class, initialises it with an input file, and runs optimal estimation. The input file is of the following form (there's one in the folder as well):
+There's an example script "optimal_estimation_example.py" - it's very simple. It imports the NEMESIS class, initialises it with an input file, and runs optimal estimation. The input file is of the following form (there's one in the folder as well):
 
 HEADER
 
@@ -49,7 +49,7 @@ to run on N cores. The speed of retrievals scales (roughly) linearly with the nu
 - There is an example in
 - The current way to do nested sampling is by adding a prior distribution code (0 for a log-gaussian, 1 for a log-uniform distribution) and a prior distribution width (in terms of the apriori fractional error) to lines in the .apr file. It defaults to a gaussian with a standard deviation of 1*(apriori error)
 - For example, consider this cloud:
-- 
+
 -1 0 32
   
 1.0 0.2 1 5
@@ -61,4 +61,4 @@ to run on N cores. The speed of retrievals scales (roughly) linearly with the nu
 - The second parameter, the peak opacity, has a log-gaussian prior distribution with a mean of 1e-2, and a standard deviation in log space of (4e-3/1e-2)*3 = 1.2
 - The third parameter has a fractional error less than 1e-7 and so is constant.
 
-
+There is an example file, "nested_sampling_example.py", which will run nested sampling on some synthetic data (with gaussian noise added) in the example_nested_sampling/ folder. You should run this with mpiexec - it needs around 100k evaluations to complete!
