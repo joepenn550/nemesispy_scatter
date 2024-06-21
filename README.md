@@ -1,10 +1,12 @@
-Installation:
+# nemesispy_scatter
+
+## Installation:
 
 To install, clone the repository and then type:
 
 pip install .
 
-Usage:
+## Usage:
 
 There's an example script in the folder containing this file - it's very simple. It imports the NEMESIS class, initialises it with an input file, and runs optimal estimation. The input file is of the following form (there's one in the folder as well):
 
@@ -21,7 +23,7 @@ mpiexec -np N python ./optimal_estimation_example.py
 
 to run on N cores. The speed of retrievals scales (roughly) linearly with the number of processors.
 
-Notes:
+## Notes:
 
 · You'll need a RADREPO environment variable set - the code will look in $RADREPO/raddata/ for the data files it needs.
 
