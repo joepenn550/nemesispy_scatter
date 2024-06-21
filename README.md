@@ -61,4 +61,4 @@ to run on N cores. The speed of retrievals scales (roughly) linearly with the nu
 - The second parameter, the peak opacity, has a log-gaussian prior distribution with a mean of 1e-2, and a standard deviation in log space of (4e-3/1e-2)*3 = 1.2
 - The third parameter has a fractional error less than 1e-7 and so is constant.
 
-There is an example file, "nested_sampling_example.py", which will run nested sampling on some synthetic data (with gaussian noise added) in the example_nested_sampling/ folder. You should run this with mpiexec - it needs around 100k evaluations to complete!
+There is an example file, "nested_sampling_example.py", which will run nested sampling on some synthetic data (with gaussian noise added) in the example_nested_sampling/ folder. You should run this in parallel with mpiexec - it needs around 100k samples to complete!
