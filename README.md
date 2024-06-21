@@ -49,6 +49,7 @@ to run on N cores. The speed of retrievals scales (roughly) linearly with the nu
 - There is an example in
 - The current way to do nested sampling is by adding a prior distribution code (0 for a log-gaussian, 1 for a log-uniform distribution) and a prior distribution width (in terms of the apriori fractional error) to lines in the .apr file. It defaults to a gaussian with a standard deviation of 1*(apriori error)
 - For example, consider this cloud:
+- 
 -1 0 32
   
 1.0 0.2 1 5
@@ -58,6 +59,6 @@ to run on N cores. The speed of retrievals scales (roughly) linearly with the nu
 0.05 0.05e-8
 - The first parameter, the knee pressure, has a log-uniform prior distribution, with a mean of 1, an upper bound of exp(log(1) + (0.2/1)*5) = exp(1) and a lower bound of exp(log(1) - (0.2/1)*5) = exp(-1)
 - The second parameter, the peak opacity, has a log-gaussian prior distribution with a mean of 1e-2, and a standard deviation in log space of (4e-3/1e-2)*3 = 1.2
-- The third parameter has a fractional error less than 1e-7 and so does not vary.
+- The third parameter has a fractional error less than 1e-7 and so is constant.
 
 
