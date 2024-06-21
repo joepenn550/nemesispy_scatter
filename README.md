@@ -1,6 +1,6 @@
 Installation:
 
-To install, type:
+To install, clone and then type:
 
 pip install .
 
@@ -10,7 +10,7 @@ There's an example script in the folder containing this file - it's very simple.
 
 HEADER
 0 or 1 for multiple folder input - this tells the code whether you're about to give it the path to a single folder to run a retrieval in (0) or whether you are giving it the path to a folder containing multiple folders to run retrievals in simultaneously.
-The next line is just the path.
+The next line is just the path to the retrieval folder.
 The next line is the project (the name of your .spx, .inp files)
 The Mie scattering calculations work a little differently in this version, so the next line tells Nemesis how spaced out the Makephase calculation wavelengths should be. To replicate Fortran results, set this to 0.
 The final line is the correlation length in degrees for the spatial smoothing term. Just like the vertical smoothing for continuous profiles, this correlates the state vectors between retrievals if you are running in multiple folder mode. The degree of correlation is dependent on the locations in the .spx files, and the correlation length. Setting this to 0 gives the same results as running the retrievals separately.
@@ -35,4 +35,4 @@ Notes:
 
 · For what I've been doing, the forward model matches up with the Fortran version to a high degree of accuracy. However, some combinations of inputs seem to cause deviations from this - I think I've fixed most of them, but I'm sure some still remain.
 
-· If you're using spatial smoothing, the matrix operations needed for optimal estimation take longer with larger spatial correlation lengths. In particular, calculating the errors on xn at the end of a retrieval can take a really long time - sometimes a few hours with long state vectors and a large number of latitude bands.
+· If you're using spatial smoothing, the matrix operations needed for optimal estimation take longer with larger spatial correlation lengths. In particular, calculating the errors on xn at the end of a retrieval can take a really long time - with long state vectors and a large number of locations.
