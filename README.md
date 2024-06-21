@@ -29,7 +29,7 @@ Notes:
 
 · An example slurm script is also provided for running the code on the cluster.
 
-· Most parameterisations are not implemented, or do not work correctly. A main priority right now is implementing more of these to ensure compatibility with Nemesis. I've mainly just been using continuous profiles for most things.
+· Most parameterisations are not implemented. A main priority right now is implementing more of these to ensure compatibility with Nemesis. I've mainly just been using continuous profiles for most things.
 
 · Errors can often be obscure. I've tried to put in error traps for most issues with reading files, so hopefully most of the time you should be able to tell what's wrong. However, if there is an issue further along in the code, it may be difficult to trace.
 
