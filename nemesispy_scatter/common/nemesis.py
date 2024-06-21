@@ -261,10 +261,13 @@ class NEMESIS:
                     try:
                         self.sol = parse_solspec_file(self.radrepo + sol_file_path[0], self.FM.wave_grid, soldist, ispace)
                     except Exception as e:
-                        if self.rank == 0:
-                            print(e, flush=True)
-                            print(f'Could not read solar file: {self.radrepo + sol_file_path[0]}. Aborting.', flush=True)
-                        self.comm.Abort(1)
+                        try: 
+                            self.sol = parse_solspec_file(sol_file_path[0], self.FM.wave_grid, soldist, ispace)
+                        except:
+                            if self.rank == 0:
+                                print(e, flush=True)
+                                print(f'Could not read solar file: {self.radrepo + sol_file_path[0]}. Aborting.', flush=True)
+                            self.comm.Abort(1)
 
                 elif count > 0:
                     total_ngeom += len(angles)
@@ -595,11 +598,10 @@ class NEMESIS:
             yn = np.concatenate([yn, self.get_spec(xn,self.angles[j], 
                                                        self.sol_angles[j], 
                                                        self.aphis[j],False if j else True, indices)])
-        y_indices = np.concatenate([indices,indices+len(self.y)//2])
-        chisq = self.rchs(yn,self.y[y_indices],self.y_err[y_indices])
+#         y_indices = np.concatenate([indices,indices+len(self.y)//2])
+        chisq = self.rchs(yn,self.y,self.y_err)
 
         like = -np.log(chisq)
-
         return like
     
     def Prior(self, cube):
@@ -610,7 +612,7 @@ class NEMESIS:
 
         return cube1
     
-    def nested_sampling(self,frac_remain=0.01,maxdiff = 5, downsampling = 1):
+    def nested_sampling(self,frac_remain=0.001,maxdiff = 5, downsampling = 1):
         self.downsampling = downsampling
         self.vars_to_vary = [i for i in range(len(self.xa)) if self.xa_err[i]>1e-7]
         
@@ -620,17 +622,35 @@ class NEMESIS:
             if dist_code == 0:
                 self.priors.append(norm(self.xa[i], self.xa_err[i] * self.dist_mults[i]).ppf)
             elif dist_code == 1:
-                self.priors.append(lambda x: x * (self.xa[i] + self.dist_mults[i]*self.xa_err[i] - \
-                                                  self.xa[i] - self.dist_mults[i]*self.xa_err[i]) + \
+                self.priors.append(lambda x, i=i: x * (self.xa[i] + self.dist_mults[i]*self.xa_err[i] - \
+                                                  self.xa[i] + self.dist_mults[i]*self.xa_err[i]) + \
                                                   self.xa[i] - self.dist_mults[i]*self.xa_err[i])
             else:
                 print('DISTRIBUTION ID NOT DEFINED!', flush = True)
-        
+
         sampler = ultranest.ReactiveNestedSampler([str(i) for i in self.vars_to_vary], self.LogLikelihood, self.Prior,
-                  log_dir=self.directory+'/ultranest_gaussian_output', resume='resume')
+                  log_dir=self.directory+'/ultranest_output', resume='resume')
         self.result = sampler.run(frac_remain=frac_remain,max_num_improvement_loops=-1)
         sampler.print_results()
         sampler.plot()
+#         import corner
+#         import matplotlib.pyplot as plt
+#         if sampler.log:
+#             sampler.logger.debug('Making corner plot ...')
+#         results = sampler.results
+#         paramnames = results['paramnames']
+#         data = results['weighted_samples']['points']
+#         weights = results['weighted_samples']['weights']
+
+#         corner.corner(
+#             results['weighted_samples']['points'],
+#             weights=results['weighted_samples']['weights'],
+#             labels=results['paramnames'],smooth = 1.0)
+            
+#         if sampler.log_to_disk:
+#             plt.savefig(os.path.join(sampler.logs['plots'], 'corner.pdf'), bbox_inches='tight')
+#             plt.close()
+#             sampler.logger.debug('Making corner plot ... done')
         sampler.plot_trace()
         
         

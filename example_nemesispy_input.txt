@@ -1,6 +1,6 @@
 #Header
 0                                                                  !1 for multiple folder input
-./example_retrieval       !directory 
+./example_retrieval/                                               !directory 
 neptune                                                            !project (name of .spx, .inp etc)
 0                                                                  !makephase will calculate at every nth wavelength
 10                                                                 !spatial smoothing correlation length

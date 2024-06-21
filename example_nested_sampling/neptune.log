@@ -1,0 +1,44 @@
+ Reading scattering information from neptune.sca                                                                                         
+Output from NEMESIS mod_scatte
+ nmu =   5
+  0.165278957666387       0.327539761183898     
+  0.477924949810444       0.292042683679684     
+  0.738773865105505       0.224889342063117     
+  0.919533908166459       0.133305990851069     
+   1.00000000000000       2.222222222222220E-002
+ isol =            1
+ dist =    30.10000    
+ lowbc =            1
+ galb =   0.000000000000000E+000
+ sol_ang, emiss_ang =   0.0000000E+00  0.0000000E+00
+ aphi =    180.0000    
+ nf =            0
+ ncont =            2
+ liscat(i) =            5
+ lnorm(i) =            1
+ scatfile = hgphase1.dat                  
+ liscat(i) =            5
+ lnorm(i) =            1
+ scatfile = hgphase2.dat                  
+ Reading scattering information from neptune.sca                                                                                         
+Output from NEMESIS mod_scatte
+ nmu =   5
+  0.165278957666387       0.327539761183898     
+  0.477924949810444       0.292042683679684     
+  0.738773865105505       0.224889342063117     
+  0.919533908166459       0.133305990851069     
+   1.00000000000000       2.222222222222220E-002
+ isol =            1
+ dist =    30.10000    
+ lowbc =            1
+ galb =   0.000000000000000E+000
+ sol_ang, emiss_ang =    61.45000       61.45000    
+ aphi =    180.0000    
+ nf =           20
+ ncont =            2
+ liscat(i) =            5
+ lnorm(i) =            1
+ scatfile = hgphase1.dat                  
+ liscat(i) =            5
+ lnorm(i) =            1
+ scatfile = hgphase2.dat                  
