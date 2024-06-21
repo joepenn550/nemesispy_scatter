@@ -1,6 +1,6 @@
 Installation:
 
-To install, clone and then type:
+To install, clone the repository and then type:
 
 pip install .
 
@@ -12,14 +12,14 @@ HEADER
 0 or 1 for multiple folder input - this tells the code whether you're about to give it the path to a single folder to run a retrieval in (0) or whether you are giving it the path to a folder containing multiple folders to run retrievals in simultaneously.
 The next line is just the path to the retrieval folder.
 The next line is the project (the name of your .spx, .inp files)
-The Mie scattering calculations work a little differently in this version, so the next line tells Nemesis how spaced out the Makephase calculation wavelengths should be. To replicate Fortran results, set this to 0.
+The Mie scattering calculations work a little differently in this version, so the next line tells Nemesis how spaced out the Makephase calculation wavelengths should be. To replicate Fortran results, leave this at 0.
 The final line is the correlation length in degrees for the spatial smoothing term. Just like the vertical smoothing for continuous profiles, this correlates the state vectors between retrievals if you are running in multiple folder mode. The degree of correlation is dependent on the locations in the .spx files, and the correlation length. Setting this to 0 gives the same results as running the retrievals separately.
 
 Once you've filled out the input file, you can run the script with:
 
 mpiexec -np N python ./optimal_estimation_example.py
 
-to run on N processors. The speed of retrievals scales (roughly) linearly with the number of processors.
+to run on N cores. The speed of retrievals scales (roughly) linearly with the number of processors.
 
 Notes:
 
