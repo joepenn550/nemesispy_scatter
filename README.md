@@ -46,7 +46,6 @@ to run on N cores. The speed of retrievals scales (roughly) linearly with the nu
 
 ## Nested Sampling
 
-- There is an example in
 - The current way to do nested sampling is by adding a prior distribution code (0 for a log-gaussian, 1 for a log-uniform distribution) and a prior distribution width (in terms of the apriori fractional error) to lines in the .apr file. It defaults to a gaussian with a standard deviation of 1*(apriori error)
 - For example, consider this cloud:
 
