@@ -8,7 +8,7 @@ pip install .
 
 ## Usage:
 
-There's an example script "optimal_estimation_example.py" - it's very simple. It imports the NEMESIS class, initialises it with an input file, and runs optimal estimation. The input file is of the following form (there's one in the folder as well):
+There's an example script "optimal_estimation_example.py" - it's very simple. It imports the NEMESIS class, initialises it with an input file, and runs optimal estimation on the example_retrieval/ folder by loading an input file. The input file is of the following form (there's one in the repo as well):
 
 HEADER
 
