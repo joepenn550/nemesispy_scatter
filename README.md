@@ -14,7 +14,7 @@ HEADER
 
 0 or 1 for multiple folder input - this tells the code whether you're about to give it the path to a single folder to run a retrieval in (0) or whether you are giving it the path to a folder containing multiple folders to run retrievals in simultaneously.
 
-The next line is just the path to the retrieval folder.
+The next line is just the path to the retrieval folder (the location of your .spx, .inp files)
 
 The next line is the project (the name of your .spx, .inp files)
 
