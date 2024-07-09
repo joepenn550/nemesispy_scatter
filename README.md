@@ -12,7 +12,7 @@ There's an example script "optimal_estimation_example.py" - it's very simple. It
 
 HEADER
 
-0 or 1 for multiple folder input - this tells the code whether you're about to give it the path to a single folder to run a retrieval in (0) or whether you are giving it the path to a folder containing multiple folders to run retrievals in simultaneously.
+0 or 1 for multiple folder input - this tells the code whether you're about to give it the path to a single folder to run a retrieval in (0) or whether you are giving it the path to a folder containing multiple folders to run retrievals in simultaneously. Leave this at 0 for a normal run.
 
 The next line is just the path to the retrieval folder (the location of your .spx, .inp files)
 
